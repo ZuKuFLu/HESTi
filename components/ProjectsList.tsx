@@ -33,6 +33,12 @@ export function ProjectsList() {
           const totals = computeTotals(project);
           const count = project.changeOrders.length;
           const undecidedCents = totals.pendingCents + totals.disputedCents;
+          const summary =
+            undecidedCents > 0
+              ? `+ ${formatUsd(undecidedCents)} awaiting you`
+              : totals.originalCents > 0
+                ? `${totals.percentOver} over quote`
+                : "";
 
           return (
             <li key={project.id}>
@@ -62,19 +68,25 @@ export function ProjectsList() {
                       · started {formatDate(project.createdAt.slice(0, 10))}
                     </span>
                   </p>
+                  {/* On a phone the money goes under the name; side by side
+                      would squeeze the project title to nothing. */}
+                  <p className="mt-1 flex flex-wrap items-baseline gap-x-2 sm:hidden">
+                    <span className="font-semibold tabular-nums">
+                      {formatUsd(totals.currentCents)}
+                    </span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {summary}
+                    </span>
+                  </p>
                 </div>
 
-                <div className="shrink-0 text-right">
+                <div className="hidden shrink-0 text-right sm:block">
                   <p className="font-semibold tabular-nums">
                     {formatUsd(totals.currentCents)}
                   </p>
-                  {undecidedCents > 0 ? (
+                  {summary ? (
                     <p className="text-xs text-muted-foreground tabular-nums">
-                      + {formatUsd(undecidedCents)} awaiting you
-                    </p>
-                  ) : totals.originalCents > 0 ? (
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      {totals.percentOver} over quote
+                      {summary}
                     </p>
                   ) : null}
                 </div>

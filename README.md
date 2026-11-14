@@ -4,8 +4,8 @@
 
 Track: **01 Money** (spending, owing).
 
-- **Live URL:** _TBD (added at Checkpoint A)_
-- **Pitch deck (PDF):** _TBD_
+- **Live URL:** https://hesti-two.vercel.app
+- **Pitch deck (PDF):** _added by the team before submission_
 
 ## The problem
 
@@ -28,6 +28,10 @@ $2,500 change order.
 
 No sign-up, no login, no database. The project is saved in your browser with a
 running total, so you can come back when the next change order arrives.
+
+Mark each change order **Pending**, **Approved** or **Disputed**: only approved
+money moves the running total, and what you haven't agreed to is shown beside
+it along with where the job lands if you approve everything.
 
 ## Why the results are trustworthy
 
@@ -71,7 +75,7 @@ If you want to see the sample analyzed live instead, delete
 | | |
 |---|---|
 | **Free** | Original quote + first change order, full report |
-| **Project Pass — $39 one-time per project** | Unlimited further change orders on that project, running total across all of them, printable report |
+| **Project Pass — $39 one-time per project** | Unlimited further change orders on that project, running total across all of them, printable report (Print report on the project page) |
 | **Home Plan — $49/yr** | Coming soon |
 
 ### How to test the paywall
@@ -122,7 +126,7 @@ npm run samples              # regenerate the sample PDFs
 npm run record-sample        # re-record the sample's Gemini response
 ```
 
-## Limitations
+## Known limitations
 
 - Projects are stored in **localStorage**, so they live in one browser only —
   they don't sync and clearing site data removes them.
@@ -134,6 +138,13 @@ npm run record-sample        # re-record the sample's Gemini response
   always analyzed live. Free-tier inputs may be used by Google to improve its
   products, so please don't upload documents with sensitive personal
   information.
+
+- The model is **Gemini 3.1 Flash-Lite** on the free tier. It is fast and
+  consistent on these documents, but it is a small model: on a messy photo or
+  an unusual document layout it can mis-read a line. Every flag shows the
+  evidence it came from so you can check it.
+- Pending and disputed change orders are tracked, but nothing is sent to the
+  contractor. HESTi writes the question; you send it.
 
 ## Disclaimer
 
