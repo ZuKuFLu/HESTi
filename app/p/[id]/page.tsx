@@ -205,6 +205,7 @@ export default function ProjectPage() {
                     matches: order.matches,
                     flags: order.flags,
                     atStakeCents: order.atStakeCents,
+                    prepared: order.prepared,
                   } satisfies AnalysisResult
                 }
               />

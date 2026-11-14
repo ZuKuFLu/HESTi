@@ -35,8 +35,36 @@ running total, so you can come back when the next change order arrives.
 - Every flag cites the exact lines it came from, in both documents.
 - Your files are never stored — they're sent to the model for one call and
   discarded.
-- Nothing is pre-written: the sample documents go through exactly the same API
-  as your own uploads.
+- **Your uploads are always analyzed live.** Every document you provide is sent
+  to Gemini for a real call; nothing about your result is pre-written.
+
+### The one exception: the sample button
+
+The free Gemini tier has a daily cap. To stop a demo dying when that cap is
+hit, **one real Gemini response for the two sample PDFs is recorded into
+`lib/sample-seed.json`** and used to pre-warm the response cache described in
+`lib/gemini.ts`. The report says so on screen:
+
+> Sample analysis prepared in advance. Your own uploads are analyzed live.
+
+What this does and does not mean:
+
+- The recording is a **genuine model output** for those exact PDFs, produced by
+  `npm run record-sample`, not hand-written.
+- It stores only the model's *reading* of the documents — the extracted line
+  items, the quote/change-order matching, and its two judgment calls. It
+  contains **no flags, no severities and no dollar findings**; those are
+  computed live by `lib/rules.ts` on every single request, including this one.
+- The cache is keyed by `sha256(model + prompt version + document bytes)`, so
+  it can only ever match those two PDFs under that exact prompt and model. **A
+  document you upload hashes differently and always calls Gemini.** If the
+  prompt or model changes, the recording stops matching and is ignored rather
+  than serving a stale answer.
+- `tests/sample-seed.test.ts` enforces all of the above, including that a
+  single changed byte misses the cache.
+
+If you want to see the sample analyzed live instead, delete
+`lib/sample-seed.json` (or run `npm run record-sample` to refresh it).
 
 ## Pricing
 
@@ -90,7 +118,8 @@ Other commands:
 ```bash
 npm test                     # unit tests (Vitest)
 npm run build                # production build
-npx tsx scripts/generate-samples.ts   # regenerate the sample PDFs
+npm run samples              # regenerate the sample PDFs
+npm run record-sample        # re-record the sample's Gemini response
 ```
 
 ## Limitations
@@ -100,7 +129,9 @@ npx tsx scripts/generate-samples.ts   # regenerate the sample PDFs
 - The paywall state also lives in localStorage, so it's client-side only. That's
   acceptable for this demo; it is not a real payment or entitlement system.
 - Gemini's **free tier** has rate limits. When the quota is busy the app says so
-  and asks you to retry. Free-tier inputs may be used by Google to improve its
+  and asks you to retry. The sample button is insulated from this by the
+  recorded response described above; your own uploads are not, because they are
+  always analyzed live. Free-tier inputs may be used by Google to improve its
   products, so please don't upload documents with sensitive personal
   information.
 

@@ -26,6 +26,8 @@ export type ChangeOrderRecord = {
   matches: Match[];
   flags: Flag[];
   atStakeCents: number;
+  /** The model's reading was replayed from the recorded sample response. */
+  prepared?: boolean;
 };
 
 export type Project = {
@@ -176,6 +178,7 @@ function toChangeOrder(result: AnalysisResult, fileName: string | null): ChangeO
     matches: result.matches,
     flags: result.flags,
     atStakeCents: result.atStakeCents,
+    prepared: result.prepared,
   };
 }
 

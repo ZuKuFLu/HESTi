@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { GoogleGenAI, type Part } from "@google/genai";
-import { aiResponseSchema, geminiResponseSchema, type AiResponse } from "@/lib/schemas";
+import {
+  aiResponseSchema,
+  geminiResponseSchema,
+  type AiResponse,
+} from "@/lib/schemas";
+import seed from "@/lib/sample-seed.json";
 
 /**
  * The single Gemini call. Everything about talking to the model lives here:
@@ -35,7 +40,13 @@ Line ids are internal. The homeowner never sees them, so explanations and questi
 Return JSON only, matching the provided schema.`;
 
 export type AnalyzeFailure = { ok: false; error: "ai_busy" | "ai_invalid" };
-export type AnalyzeSuccess = { ok: true; data: AiResponse; cached: boolean };
+export type AnalyzeSuccess = {
+  ok: true;
+  data: AiResponse;
+  cached: boolean;
+  /** True when this came from the recorded sample response, not a live call. */
+  prepared: boolean;
+};
 export type AnalyzeOutcome = AnalyzeSuccess | AnalyzeFailure;
 
 /**
@@ -54,6 +65,41 @@ export type DocumentInput =
  */
 const cache = new Map<string, AiResponse>();
 
+/**
+ * Keys served from the recorded sample response rather than a live call, so
+ * the report can say so on screen.
+ */
+const seededKeys = new Set<string>();
+
+/**
+ * Pre-warms the cache above with one real Gemini response, recorded by
+ * `npm run record-sample` against the sample PDFs.
+ *
+ * This is the same cache section 5 already allows, persisted across cold
+ * starts so a judging demo cannot be taken out by the free-tier daily cap.
+ * It is keyed by sha256(model + prompt version + document bytes), so it only
+ * ever matches those exact documents under that exact prompt: a user upload
+ * hashes differently and always calls Gemini live. If the model or the prompt
+ * changes, the seed no longer matches and is ignored rather than serving a
+ * stale answer.
+ *
+ * The rule engine, the money maths and the report still run live on it.
+ */
+function loadSeed(model: string): void {
+  if (seedLoaded) return;
+  seedLoaded = true;
+
+  if (seed.promptVersion !== PROMPT_VERSION || seed.model !== model) return;
+
+  const parsed = aiResponseSchema.safeParse(seed.response);
+  if (!parsed.success) return;
+
+  cache.set(seed.key, parsed.data);
+  seededKeys.add(seed.key);
+}
+
+let seedLoaded = false;
+
 export function getModelId(): string {
   const model = process.env.GEMINI_MODEL?.trim();
   if (!model) throw new Error("GEMINI_MODEL is not set");
@@ -66,7 +112,11 @@ function getClient(): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
-function cacheKey(model: string, quote: DocumentInput, changeOrder: DocumentInput): string {
+export function cacheKey(
+  model: string,
+  quote: DocumentInput,
+  changeOrder: DocumentInput,
+): string {
   const hash = createHash("sha256");
   hash.update(model);
   hash.update(PROMPT_VERSION);
@@ -112,10 +162,12 @@ export async function analyzeDocuments(
   changeOrder: DocumentInput,
 ): Promise<AnalyzeOutcome> {
   const model = getModelId();
+  loadSeed(model);
   const key = cacheKey(model, quote, changeOrder);
 
   const hit = cache.get(key);
-  if (hit) return { ok: true, data: hit, cached: true };
+  if (hit)
+    return { ok: true, data: hit, cached: true, prepared: seededKeys.has(key) };
 
   const parts: Part[] = [
     { text: TASK_INSTRUCTION },
@@ -130,7 +182,12 @@ export async function analyzeDocuments(
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const attemptParts = repairNote
-      ? [...parts, { text: `Your previous reply did not match the schema: ${repairNote}. Return valid JSON matching the schema.` }]
+      ? [
+          ...parts,
+          {
+            text: `Your previous reply did not match the schema: ${repairNote}. Return valid JSON matching the schema.`,
+          },
+        ]
       : parts;
 
     let rawText: string;
@@ -158,7 +215,7 @@ export async function analyzeDocuments(
     const parsed = safeParse(rawText);
     if (parsed.ok) {
       cache.set(key, parsed.data);
-      return { ok: true, data: parsed.data, cached: false };
+      return { ok: true, data: parsed.data, cached: false, prepared: false };
     }
 
     if (retryUsed) return { ok: false, error: "ai_invalid" };
@@ -169,7 +226,9 @@ export async function analyzeDocuments(
   return { ok: false, error: "ai_invalid" };
 }
 
-function safeParse(rawText: string): { ok: true; data: AiResponse } | { ok: false; message: string } {
+function safeParse(
+  rawText: string,
+): { ok: true; data: AiResponse } | { ok: false; message: string } {
   if (!rawText.trim()) return { ok: false, message: "the response was empty" };
 
   let json: unknown;
@@ -183,7 +242,10 @@ function safeParse(rawText: string): { ok: true; data: AiResponse } | { ok: fals
   if (!result.success) {
     const first = result.error.issues[0];
     const where = first?.path.join(".") || "the response";
-    return { ok: false, message: `${where}: ${first?.message ?? "did not match the schema"}` };
+    return {
+      ok: false,
+      message: `${where}: ${first?.message ?? "did not match the schema"}`,
+    };
   }
 
   return { ok: true, data: result.data };
@@ -224,4 +286,6 @@ function sleep(ms: number): Promise<void> {
 /** Test seam: the cache is process-local and otherwise invisible. */
 export function clearCacheForTests(): void {
   cache.clear();
+  seededKeys.clear();
+  seedLoaded = true; // Keep the seed out of tests that expect a live call.
 }

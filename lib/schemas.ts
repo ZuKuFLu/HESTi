@@ -145,6 +145,12 @@ export type AnalysisResult = {
   matches: Match[];
   flags: Flag[];
   atStakeCents: number;
+  /**
+   * True when the model's reading of these documents came from the recorded
+   * sample response instead of a live call. The flags, amounts and report are
+   * computed live either way. Shown to the reader rather than hidden.
+   */
+  prepared?: boolean;
 };
 
 // --- Gemini response schema -------------------------------------------------

@@ -121,6 +121,7 @@ export async function POST(request: Request) {
     ),
     flags,
     atStakeCents,
+    prepared: outcome.prepared,
   };
 
   return NextResponse.json(result);

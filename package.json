@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run --passWithNoTests",
-    "samples": "tsx scripts/generate-samples.ts"
+    "samples": "tsx scripts/generate-samples.ts",
+    "record-sample": "tsx scripts/record-sample.ts"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",

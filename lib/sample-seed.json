@@ -1,0 +1,266 @@
+{
+  "recordedAt": "2026-11-14T15:27:36.541Z",
+  "model": "gemini-3.1-flash-lite",
+  "promptVersion": "v1",
+  "key": "778d2eee64e6acee43740ed53238248a97c1a2f254f4abfdd03062fb9d27b22a",
+  "documents": [
+    "quote-bathroom.pdf",
+    "change-order-1.pdf"
+  ],
+  "note": "A real Gemini response for the two sample PDFs, recorded so the demo survives the free-tier daily cap. Flags, totals and the report are still computed live from this by lib/rules.ts. User uploads hash differently and always call Gemini.",
+  "response": {
+    "quote": {
+      "is_relevant": true,
+      "contractor_name": "Summit Home Renovations LLC",
+      "document_number": "1042",
+      "document_date": "10/01/2026",
+      "line_items": [
+        {
+          "id": "Q1",
+          "description": "Demolition and haul-away of existing tub, tile and vanity",
+          "category": "demolition",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 900,
+          "total": 900,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "Q2",
+          "description": "Plumbing rough-in, relocate shower valve and drain",
+          "category": "plumbing",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 1400,
+          "total": 1400,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "Q3",
+          "description": "Shower pan, cement board and waterproofing membrane (walls and floor)",
+          "category": "waterproofing",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 650,
+          "total": 650,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "Q4",
+          "description": "Tile installation labor (floor and shower walls)",
+          "category": "tile",
+          "qty": 160,
+          "unit": "sq ft",
+          "unit_price": 10,
+          "total": 1600,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "Q5",
+          "description": "Tile material ALLOWANCE (owner selection)",
+          "category": "tile",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 1500,
+          "total": 1500,
+          "is_allowance": true,
+          "allowance_amount": 1500
+        },
+        {
+          "id": "Q6",
+          "description": "Vanity, toilet and fixtures ALLOWANCE (owner selection)",
+          "category": "fixtures",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 1200,
+          "total": 1200,
+          "is_allowance": true,
+          "allowance_amount": 1200
+        },
+        {
+          "id": "Q7",
+          "description": "Electrical, exhaust fan and GFCI outlets",
+          "category": "electrical",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 450,
+          "total": 450,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "Q8",
+          "description": "Permit and inspection fees",
+          "category": "permit",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 300,
+          "total": 300,
+          "is_allowance": false,
+          "allowance_amount": null
+        }
+      ],
+      "subtotal": null,
+      "total": 8000,
+      "schedule": {
+        "start_date": "10/20/2026",
+        "end_date": "11/21/2026",
+        "change_reason": null
+      },
+      "payment_terms": [
+        {
+          "label": "30% deposit",
+          "amount": 2400,
+          "percent": 30,
+          "due": "at signing"
+        },
+        {
+          "label": "40% at rough-in inspection",
+          "amount": 3200,
+          "percent": 40,
+          "due": "at rough-in inspection"
+        },
+        {
+          "label": "30% at completion",
+          "amount": 2400,
+          "percent": 30,
+          "due": "at completion"
+        }
+      ],
+      "has_signature_or_approval": true
+    },
+    "change_order": {
+      "is_relevant": true,
+      "contractor_name": "Summit Home Renovations LLC",
+      "document_number": "1",
+      "document_date": "11/03/2026",
+      "line_items": [
+        {
+          "id": "C1",
+          "description": "Tile upgrade over allowance (selected porcelain $2,100.00 vs $1,500.00 allowance)",
+          "category": "tile",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 600,
+          "total": 600,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "C2",
+          "description": "Waterproofing membrane for shower walls",
+          "category": "waterproofing",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 450,
+          "total": 450,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "C3",
+          "description": "Additional labor",
+          "category": "labor",
+          "qty": 8,
+          "unit": "hrs",
+          "unit_price": 85,
+          "total": 680,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "C4",
+          "description": "Recessed niche shelves",
+          "category": "other",
+          "qty": 3,
+          "unit": null,
+          "unit_price": 180,
+          "total": 640,
+          "is_allowance": false,
+          "allowance_amount": null
+        },
+        {
+          "id": "C5",
+          "description": "Misc. additional work",
+          "category": "other",
+          "qty": 1,
+          "unit": "lot",
+          "unit_price": 130,
+          "total": 130,
+          "is_allowance": false,
+          "allowance_amount": null
+        }
+      ],
+      "subtotal": null,
+      "total": 2500,
+      "schedule": {
+        "start_date": null,
+        "end_date": "11/30/2026",
+        "change_reason": null
+      },
+      "payment_terms": [
+        {
+          "label": "Change order amount",
+          "amount": 2500,
+          "percent": null,
+          "due": "due in full upon signing"
+        }
+      ],
+      "has_signature_or_approval": false
+    },
+    "matches": [
+      {
+        "co_line_id": "C1",
+        "quote_line_id": "Q5",
+        "relation": "allowance_adjustment",
+        "reason": "This covers the cost difference between the selected tile and the original allowance."
+      },
+      {
+        "co_line_id": "C2",
+        "quote_line_id": "Q3",
+        "relation": "already_included",
+        "reason": "Waterproofing membrane for shower walls is already included in the original shower pan and waterproofing line item."
+      },
+      {
+        "co_line_id": "C3",
+        "quote_line_id": null,
+        "relation": "new",
+        "reason": "The original quote does not specify additional labor hours."
+      },
+      {
+        "co_line_id": "C4",
+        "quote_line_id": null,
+        "relation": "new",
+        "reason": "Recessed niche shelves were not mentioned in the original estimate."
+      },
+      {
+        "co_line_id": "C5",
+        "quote_line_id": null,
+        "relation": "new",
+        "reason": "Miscellaneous additional work is not defined in the original scope."
+      }
+    ],
+    "judgment_flags": [
+      {
+        "type": "vague_item",
+        "co_line_ids": [
+          "C5"
+        ],
+        "explanation": "The item 'Misc. additional work' does not describe the specific tasks being performed.",
+        "question": "Could you please provide a detailed breakdown of what is included in the miscellaneous additional work?"
+      },
+      {
+        "type": "labor_without_scope",
+        "co_line_ids": [
+          "C3"
+        ],
+        "explanation": "The 'Additional labor' line does not specify what tasks this labor is for.",
+        "question": "What specific tasks will the additional labor hours cover?"
+      }
+    ]
+  }
+}
