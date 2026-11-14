@@ -137,7 +137,7 @@ function AskBlock({ question }: { question: string }) {
           type="button"
           onClick={copy}
           aria-label="Copy this question"
-          className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none print:hidden"
         >
           {state === "copied" ? (
             <Check className="size-3.5" />

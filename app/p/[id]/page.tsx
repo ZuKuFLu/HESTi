@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   CheckCircle2,
   FileText,
   House,
+  Lock,
   Plus,
+  Printer,
   TriangleAlert,
 } from "lucide-react";
 import { PaywallCard } from "@/components/PaywallCard";
@@ -60,10 +62,28 @@ export default function ProjectPage() {
   }, [id]);
 
   const project = state.status === "ready" ? state.project : null;
+  const paywallRef = useRef<HTMLDivElement>(null);
   const quoteJson = useMemo(
     () => (project ? JSON.stringify(project.quote) : ""),
     [project],
   );
+
+  function handlePrint() {
+    if (project?.paid) {
+      window.print();
+      return;
+    }
+    // Locked, not dead: show what unlocks it.
+    setShowPaywall(true);
+    window.setTimeout(
+      () =>
+        paywallRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        }),
+      0,
+    );
+  }
 
   function handleStatusChange(
     changeOrderId: string,
@@ -140,7 +160,32 @@ export default function ProjectPage() {
             ) : null}
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={handlePrint}
+          className="ml-auto hidden shrink-0 gap-2 sm:flex print:hidden"
+        >
+          {ready.paid ? (
+            <Printer className="size-4" />
+          ) : (
+            <Lock className="size-4" />
+          )}
+          Print report
+        </Button>
       </section>
+
+      <Button
+        variant="outline"
+        onClick={handlePrint}
+        className="w-full gap-2 sm:hidden print:hidden"
+      >
+        {ready.paid ? (
+          <Printer className="size-4" />
+        ) : (
+          <Lock className="size-4" />
+        )}
+        Print report
+      </Button>
 
       {justPaid ? (
         <div
@@ -206,7 +251,7 @@ export default function ProjectPage() {
                   ) : null}
                 </p>
 
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-3 flex flex-wrap items-center gap-2 print:hidden">
                   <label
                     htmlFor={`status-${order.id}`}
                     className="text-xs font-medium text-muted-foreground"
@@ -251,7 +296,7 @@ export default function ProjectPage() {
         ))}
       </ol>
 
-      <section className="space-y-4">
+      <section ref={paywallRef} className="scroll-mt-24 space-y-4 print:hidden">
         {atLimit || limitHit ? (
           <Card>
             <CardContent>
