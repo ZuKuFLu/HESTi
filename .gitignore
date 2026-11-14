@@ -22,6 +22,9 @@ next-env.d.ts
 # testing
 /coverage
 
+# local tooling
+/.claude/
+
 # misc
 .DS_Store
 *.pem
