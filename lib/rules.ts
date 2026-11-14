@@ -5,6 +5,7 @@ import type {
   JudgmentFlag,
   LineItem,
   Match,
+  PaymentTerm,
   Severity,
 } from "@/lib/schemas";
 
@@ -305,7 +306,7 @@ function paymentTermsFlags(changeOrder: Extraction): ScoredFlag[] {
           amountCents: 0,
           coLineIds: [],
           quoteLineIds: [],
-          explanation: `This change order asks for payment up front: "${term.label.trim()}". Your original quote held part of the money back until completion, which is the usual protection if the work isn't finished properly.`,
+          explanation: `This change order asks for payment up front: "${describeTerm(term)}". Your original quote held part of the money back until completion, which is the usual protection if the work isn't finished properly.`,
           question: `Can payment for this change order follow the same schedule as the original quote, with part of it held until the work is complete?`,
           source: "rule",
         },
@@ -413,6 +414,18 @@ function notSignedFlags(changeOrder: Extraction): ScoredFlag[] {
 }
 
 // --- small helpers ----------------------------------------------------------
+
+/**
+ * The model often splits "due in full upon signing" into a label and a due
+ * field; quoting only the label back at the homeowner reads like a fragment.
+ */
+function describeTerm(term: PaymentTerm): string {
+  const label = term.label.trim();
+  const due = term.due?.trim();
+  if (!due) return label;
+  if (label.toLowerCase().includes(due.toLowerCase())) return label;
+  return `${label} — ${due}`;
+}
 
 function formatDateUs(date: Date): string {
   const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
