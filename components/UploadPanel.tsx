@@ -31,11 +31,21 @@ type SlotState = { mode: "file" | "text"; file: File | null; text: string };
 
 const emptySlot = (): SlotState => ({ mode: "file", file: null, text: "" });
 
+/**
+ * Two shapes, one state machine.
+ *
+ * On the home page both documents are collected. On a project page the quote
+ * is already extracted, so `quoteJson` is sent instead and only the new change
+ * order is uploaded — still one document, still one Gemini call.
+ */
 export function UploadPanel({
   onResult,
+  quoteJson,
 }: {
   onResult: (payload: AnalysisPayload) => void;
+  quoteJson?: string;
 }) {
+  const changeOrderOnly = quoteJson !== undefined;
   const [quote, setQuote] = useState<SlotState>(emptySlot);
   const [changeOrder, setChangeOrder] = useState<SlotState>(emptySlot);
   const [projectName, setProjectName] = useState("");
@@ -93,7 +103,7 @@ export function UploadPanel({
     const quoteReady = quote.mode === "file" ? quote.file : quote.text.trim();
     const coReady = changeOrder.mode === "file" ? changeOrder.file : changeOrder.text.trim();
 
-    if (!quoteReady) {
+    if (!changeOrderOnly && !quoteReady) {
       setError("Please add your original quote.");
       return;
     }
@@ -105,7 +115,9 @@ export function UploadPanel({
     setLastRun("form");
     const form = new FormData();
 
-    if (quote.mode === "file" && quote.file) {
+    if (changeOrderOnly) {
+      form.set("quoteJson", quoteJson);
+    } else if (quote.mode === "file" && quote.file) {
       form.set("quoteFile", await prepareFileForUpload(quote.file));
     } else {
       form.set("quoteText", quote.text.trim());
@@ -161,18 +173,24 @@ export function UploadPanel({
   return (
     <Card className="border-2">
       <CardContent className="space-y-6">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className={changeOrderOnly ? "" : "grid gap-5 sm:grid-cols-2"}>
+          {changeOrderOnly ? null : (
+            <DocumentSlot
+              label="Original quote"
+              hint="The estimate you agreed to"
+              state={quote}
+              onChange={setQuote}
+              disabled={busy}
+              idPrefix="quote"
+            />
+          )}
           <DocumentSlot
-            label="Original quote"
-            hint="The estimate you agreed to"
-            state={quote}
-            onChange={setQuote}
-            disabled={busy}
-            idPrefix="quote"
-          />
-          <DocumentSlot
-            label="Change order"
-            hint="The new document asking for more"
+            label={changeOrderOnly ? "New change order" : "Change order"}
+            hint={
+              changeOrderOnly
+                ? "We'll compare it with the quote already on this project"
+                : "The new document asking for more"
+            }
             state={changeOrder}
             onChange={setChangeOrder}
             disabled={busy}
@@ -180,19 +198,22 @@ export function UploadPanel({
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="project-name" className="text-sm font-medium">
-            Project name <span className="font-normal text-muted-foreground">(optional)</span>
-          </label>
-          <Input
-            id="project-name"
-            value={projectName}
-            onChange={(event) => setProjectName(event.target.value)}
-            placeholder={DEFAULT_PROJECT_NAME}
-            disabled={busy}
-            maxLength={80}
-          />
-        </div>
+        {changeOrderOnly ? null : (
+          <div className="space-y-2">
+            <label htmlFor="project-name" className="text-sm font-medium">
+              Project name{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </label>
+            <Input
+              id="project-name"
+              value={projectName}
+              onChange={(event) => setProjectName(event.target.value)}
+              placeholder={DEFAULT_PROJECT_NAME}
+              disabled={busy}
+              maxLength={80}
+            />
+          </div>
+        )}
 
         {busy ? (
           <div className="space-y-3 rounded-lg border bg-muted/40 p-4">
@@ -220,11 +241,13 @@ export function UploadPanel({
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button onClick={submitForm} disabled={busy} size="lg" className="sm:flex-1">
-            {busy ? "Checking…" : "Check my change order"}
+            {busy ? "Checking…" : changeOrderOnly ? "Check this change order" : "Check my change order"}
           </Button>
-          <Button onClick={submitSample} disabled={busy} size="lg" variant="outline">
-            Try a sample
-          </Button>
+          {changeOrderOnly ? null : (
+            <Button onClick={submitSample} disabled={busy} size="lg" variant="outline">
+              Try a sample
+            </Button>
+          )}
         </div>
 
         <p className="text-xs text-muted-foreground">
