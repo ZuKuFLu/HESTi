@@ -22,6 +22,8 @@ import {
   addChangeOrder,
   getProject,
   isPersistent,
+  setChangeOrderStatus,
+  type ChangeOrderStatus,
   type Project,
 } from "@/lib/projects";
 import type { AnalysisResult } from "@/lib/schemas";
@@ -62,6 +64,14 @@ export default function ProjectPage() {
     () => (project ? JSON.stringify(project.quote) : ""),
     [project],
   );
+
+  function handleStatusChange(
+    changeOrderId: string,
+    status: ChangeOrderStatus,
+  ) {
+    const updated = setChangeOrderStatus(id, changeOrderId, status);
+    if (updated) setState({ status: "ready", project: updated });
+  }
 
   function handleResult(payload: AnalysisPayload) {
     const outcome = addChangeOrder(
@@ -195,6 +205,33 @@ export default function ProjectPage() {
                     </span>
                   ) : null}
                 </p>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <label
+                    htmlFor={`status-${order.id}`}
+                    className="text-xs font-medium text-muted-foreground"
+                  >
+                    Where does this stand?
+                  </label>
+                  <select
+                    id={`status-${order.id}`}
+                    value={order.status}
+                    onChange={(event) =>
+                      handleStatusChange(
+                        order.id,
+                        event.target.value as ChangeOrderStatus,
+                      )
+                    }
+                    className="h-8 rounded-lg border border-border bg-card px-2 text-sm font-medium outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="disputed">Disputed</option>
+                  </select>
+                  <span className="text-xs text-muted-foreground">
+                    Only approved change orders count toward the total.
+                  </span>
+                </div>
               </div>
 
               <ReportView

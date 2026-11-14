@@ -32,6 +32,7 @@ export function ProjectsList() {
         {projects.map((project) => {
           const totals = computeTotals(project);
           const count = project.changeOrders.length;
+          const undecidedCents = totals.pendingCents + totals.disputedCents;
 
           return (
             <li key={project.id}>
@@ -67,7 +68,11 @@ export function ProjectsList() {
                   <p className="font-semibold tabular-nums">
                     {formatUsd(totals.currentCents)}
                   </p>
-                  {totals.originalCents > 0 ? (
+                  {undecidedCents > 0 ? (
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      + {formatUsd(undecidedCents)} awaiting you
+                    </p>
+                  ) : totals.originalCents > 0 ? (
                     <p className="text-xs text-muted-foreground tabular-nums">
                       {totals.percentOver} over quote
                     </p>

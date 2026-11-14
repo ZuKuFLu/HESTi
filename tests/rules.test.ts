@@ -46,7 +46,13 @@ function extraction(overrides: Partial<Extraction> = {}): Extraction {
 }
 
 function term(overrides: Partial<PaymentTerm> = {}): PaymentTerm {
-  return { label: "Deposit", amount: null, percent: null, due: null, ...overrides };
+  return {
+    label: "Deposit",
+    amount: null,
+    percent: null,
+    due: null,
+    ...overrides,
+  };
 }
 
 function run(args: {
@@ -64,7 +70,8 @@ function run(args: {
 }
 
 const typesOf = (flags: Flag[]): FlagType[] => flags.map((flag) => flag.type);
-const find = (flags: Flag[], type: FlagType) => flags.find((flag) => flag.type === type);
+const find = (flags: Flag[], type: FlagType) =>
+  flags.find((flag) => flag.type === type);
 
 // --- math_line --------------------------------------------------------------
 
@@ -108,7 +115,9 @@ describe("math_line", () => {
   it("handles fractional quantities without floating point drift", () => {
     const { flags } = run({
       changeOrder: extraction({
-        line_items: [line({ id: "C1", qty: 1.15, unit_price: 0.1, total: 0.115 })],
+        line_items: [
+          line({ id: "C1", qty: 1.15, unit_price: 0.1, total: 0.115 }),
+        ],
       }),
     });
 
@@ -140,7 +149,10 @@ describe("math_total", () => {
   it("accepts a total that matches the lines", () => {
     const { flags } = run({
       changeOrder: extraction({
-        line_items: [line({ id: "C1", total: 600 }), line({ id: "C2", total: 450 })],
+        line_items: [
+          line({ id: "C1", total: 600 }),
+          line({ id: "C2", total: 450 }),
+        ],
         total: 1050,
       }),
     });
@@ -163,13 +175,26 @@ describe("duplicate_scope", () => {
   it("flags a change order line the quote already covers", () => {
     const { flags } = run({
       quote: extraction({
-        line_items: [line({ id: "Q1", description: "Demolition and haul-away", total: 900 })],
+        line_items: [
+          line({
+            id: "Q1",
+            description: "Demolition and haul-away",
+            total: 900,
+          }),
+        ],
       }),
       changeOrder: extraction({
-        line_items: [line({ id: "C3", description: "Haul-away fee", total: 250 })],
+        line_items: [
+          line({ id: "C3", description: "Haul-away fee", total: 250 }),
+        ],
       }),
       matches: [
-        { co_line_id: "C3", quote_line_id: "Q1", relation: "already_included", reason: "same work" },
+        {
+          co_line_id: "C3",
+          quote_line_id: "Q1",
+          relation: "already_included",
+          reason: "same work",
+        },
       ],
     });
 
@@ -184,7 +209,14 @@ describe("duplicate_scope", () => {
   it("does not flag a genuinely new line", () => {
     const { flags } = run({
       changeOrder: extraction({ line_items: [line({ id: "C1", total: 450 })] }),
-      matches: [{ co_line_id: "C1", quote_line_id: null, relation: "new", reason: "new work" }],
+      matches: [
+        {
+          co_line_id: "C1",
+          quote_line_id: null,
+          relation: "new",
+          reason: "new work",
+        },
+      ],
     });
 
     expect(typesOf(flags)).not.toContain("duplicate_scope");
@@ -197,7 +229,9 @@ describe("judgment flags from the model", () => {
   it("turns vague_item into a medium flag priced at the cited line", () => {
     const { flags } = run({
       changeOrder: extraction({
-        line_items: [line({ id: "C5", description: "Misc. additional work", total: 130 })],
+        line_items: [
+          line({ id: "C5", description: "Misc. additional work", total: 130 }),
+        ],
       }),
       judgmentFlags: [
         {
@@ -213,14 +247,19 @@ describe("judgment flags from the model", () => {
     expect(flag?.severity).toBe("medium");
     expect(flag?.amountCents).toBe(13_000);
     expect(flag?.source).toBe("ai");
-    expect(flag?.explanation).toBe("This line does not say what work is included.");
+    expect(flag?.explanation).toBe(
+      "This line does not say what work is included.",
+    );
     expect(flag?.question).toBe("What does this cover?");
   });
 
   it("prices labor_without_scope across every line it cites", () => {
     const { flags } = run({
       changeOrder: extraction({
-        line_items: [line({ id: "C3", total: 680 }), line({ id: "C4", total: 640 })],
+        line_items: [
+          line({ id: "C3", total: 680 }),
+          line({ id: "C4", total: 640 }),
+        ],
       }),
       judgmentFlags: [
         {
@@ -243,7 +282,9 @@ describe("payment_terms_changed", () => {
     const { flags } = run({
       changeOrder: extraction({
         total: 2500,
-        payment_terms: [term({ label: "Change order amount due in full upon signing" })],
+        payment_terms: [
+          term({ label: "Change order amount due in full upon signing" }),
+        ],
       }),
     });
 
@@ -256,7 +297,9 @@ describe("payment_terms_changed", () => {
     const { flags } = run({
       changeOrder: extraction({
         total: 2500,
-        payment_terms: [term({ label: "Deposit", percent: 50, due: "at signing" })],
+        payment_terms: [
+          term({ label: "Deposit", percent: 50, due: "at signing" }),
+        ],
       }),
     });
 
@@ -267,7 +310,9 @@ describe("payment_terms_changed", () => {
     const { flags } = run({
       changeOrder: extraction({
         total: 2500,
-        payment_terms: [term({ label: "Deposit", amount: 1250, due: "at signing" })],
+        payment_terms: [
+          term({ label: "Deposit", amount: 1250, due: "at signing" }),
+        ],
       }),
     });
 
@@ -278,7 +323,9 @@ describe("payment_terms_changed", () => {
     const { flags } = run({
       changeOrder: extraction({
         total: 2500,
-        payment_terms: [term({ label: "Balance due in full at completion", percent: 100 })],
+        payment_terms: [
+          term({ label: "Balance due in full at completion", percent: 100 }),
+        ],
       }),
     });
 
@@ -289,7 +336,9 @@ describe("payment_terms_changed", () => {
     const { flags } = run({
       changeOrder: extraction({
         total: 2500,
-        payment_terms: [term({ label: "Deposit", percent: 20, due: "at signing" })],
+        payment_terms: [
+          term({ label: "Deposit", percent: 20, due: "at signing" }),
+        ],
       }),
     });
 
@@ -307,7 +356,9 @@ describe("payment_terms_changed", () => {
       }),
     });
 
-    expect(flags.filter((flag) => flag.type === "payment_terms_changed")).toHaveLength(1);
+    expect(
+      flags.filter((flag) => flag.type === "payment_terms_changed"),
+    ).toHaveLength(1);
   });
 });
 
@@ -328,7 +379,13 @@ describe("allowance_overrun", () => {
         ],
       }),
       changeOrder: extraction({
-        line_items: [line({ id: "C1", description: "Tile upgrade over allowance", total: 600 })],
+        line_items: [
+          line({
+            id: "C1",
+            description: "Tile upgrade over allowance",
+            total: 600,
+          }),
+        ],
       }),
       matches: [
         {
@@ -353,10 +410,18 @@ describe("schedule_slip", () => {
   it("flags a later completion date with no reason given", () => {
     const { flags } = run({
       quote: extraction({
-        schedule: { start_date: "10/20/2026", end_date: "11/21/2026", change_reason: null },
+        schedule: {
+          start_date: "10/20/2026",
+          end_date: "11/21/2026",
+          change_reason: null,
+        },
       }),
       changeOrder: extraction({
-        schedule: { start_date: null, end_date: "11/30/2026", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "11/30/2026",
+          change_reason: null,
+        },
       }),
     });
 
@@ -370,7 +435,11 @@ describe("schedule_slip", () => {
   it("stays quiet when the change order explains the delay", () => {
     const { flags } = run({
       quote: extraction({
-        schedule: { start_date: null, end_date: "11/21/2026", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "11/21/2026",
+          change_reason: null,
+        },
       }),
       changeOrder: extraction({
         schedule: {
@@ -387,10 +456,18 @@ describe("schedule_slip", () => {
   it("stays quiet when the date did not move", () => {
     const { flags } = run({
       quote: extraction({
-        schedule: { start_date: null, end_date: "11/21/2026", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "11/21/2026",
+          change_reason: null,
+        },
       }),
       changeOrder: extraction({
-        schedule: { start_date: null, end_date: "11/21/2026", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "11/21/2026",
+          change_reason: null,
+        },
       }),
     });
 
@@ -400,10 +477,18 @@ describe("schedule_slip", () => {
   it("stays quiet when a date is missing or unparseable", () => {
     const { flags } = run({
       quote: extraction({
-        schedule: { start_date: null, end_date: "sometime in November", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "sometime in November",
+          change_reason: null,
+        },
       }),
       changeOrder: extraction({
-        schedule: { start_date: null, end_date: "11/30/2026", change_reason: null },
+        schedule: {
+          start_date: null,
+          end_date: "11/30/2026",
+          change_reason: null,
+        },
       }),
     });
 
@@ -440,10 +525,20 @@ describe("$ at stake", () => {
       quote: extraction({ line_items: [line({ id: "Q1", total: 900 })] }),
       changeOrder: extraction({ line_items: [line({ id: "C3", total: 250 })] }),
       matches: [
-        { co_line_id: "C3", quote_line_id: "Q1", relation: "already_included", reason: "same" },
+        {
+          co_line_id: "C3",
+          quote_line_id: "Q1",
+          relation: "already_included",
+          reason: "same",
+        },
       ],
       judgmentFlags: [
-        { type: "vague_item", co_line_ids: ["C3"], explanation: "x", question: "y" },
+        {
+          type: "vague_item",
+          co_line_ids: ["C3"],
+          explanation: "x",
+          question: "y",
+        },
       ],
     });
 
@@ -458,7 +553,12 @@ describe("$ at stake", () => {
         line_items: [line({ id: "C4", qty: 3, unit_price: 180, total: 640 })],
       }),
       matches: [
-        { co_line_id: "C4", quote_line_id: "Q1", relation: "already_included", reason: "same" },
+        {
+          co_line_id: "C4",
+          quote_line_id: "Q1",
+          relation: "already_included",
+          reason: "same",
+        },
       ],
     });
 
@@ -469,11 +569,19 @@ describe("$ at stake", () => {
     const { atStakeCents } = run({
       quote: extraction({ line_items: [line({ id: "Q1", total: 900 })] }),
       changeOrder: extraction({
-        line_items: [line({ id: "C1", total: 250 }), line({ id: "C2", total: 100 })],
+        line_items: [
+          line({ id: "C1", total: 250 }),
+          line({ id: "C2", total: 100 }),
+        ],
         total: 500,
       }),
       matches: [
-        { co_line_id: "C1", quote_line_id: "Q1", relation: "already_included", reason: "same" },
+        {
+          co_line_id: "C1",
+          quote_line_id: "Q1",
+          relation: "already_included",
+          reason: "same",
+        },
       ],
     });
 
@@ -517,20 +625,34 @@ describe("flag ordering", () => {
         has_signature_or_approval: false,
       }),
       matches: [
-        { co_line_id: "C1", quote_line_id: "Q1", relation: "already_included", reason: "same" },
+        {
+          co_line_id: "C1",
+          quote_line_id: "Q1",
+          relation: "already_included",
+          reason: "same",
+        },
       ],
       judgmentFlags: [
-        { type: "vague_item", co_line_ids: ["C3"], explanation: "x", question: "y" },
+        {
+          type: "vague_item",
+          co_line_ids: ["C3"],
+          explanation: "x",
+          question: "y",
+        },
       ],
     });
 
     const severities = flags.map((flag) => flag.severity);
-    expect(severities).toEqual([...severities].sort((a, b) => {
-      const order = { high: 0, medium: 1, info: 2 };
-      return order[a] - order[b];
-    }));
+    expect(severities).toEqual(
+      [...severities].sort((a, b) => {
+        const order = { high: 0, medium: 1, info: 2 };
+        return order[a] - order[b];
+      }),
+    );
 
-    const high = flags.filter((flag) => flag.severity === "high").map((flag) => flag.amountCents);
+    const high = flags
+      .filter((flag) => flag.severity === "high")
+      .map((flag) => flag.amountCents);
     expect(high).toEqual([...high].sort((a, b) => b - a));
   });
 });
@@ -541,13 +663,38 @@ describe("sanitize", () => {
       quote: extraction({ line_items: [line({ id: "Q1", total: 900 })] }),
       changeOrder: extraction({ line_items: [line({ id: "C1", total: 250 })] }),
       matches: [
-        { co_line_id: "C1", quote_line_id: "Q1", relation: "already_included" as const, reason: "a" },
-        { co_line_id: "C9", quote_line_id: "Q1", relation: "already_included" as const, reason: "b" },
-        { co_line_id: "C1", quote_line_id: "Q9", relation: "changed" as const, reason: "c" },
+        {
+          co_line_id: "C1",
+          quote_line_id: "Q1",
+          relation: "already_included" as const,
+          reason: "a",
+        },
+        {
+          co_line_id: "C9",
+          quote_line_id: "Q1",
+          relation: "already_included" as const,
+          reason: "b",
+        },
+        {
+          co_line_id: "C1",
+          quote_line_id: "Q9",
+          relation: "changed" as const,
+          reason: "c",
+        },
       ],
       judgmentFlags: [
-        { type: "vague_item" as const, co_line_ids: ["C1", "C9"], explanation: "x", question: "y" },
-        { type: "vague_item" as const, co_line_ids: ["C9"], explanation: "x", question: "y" },
+        {
+          type: "vague_item" as const,
+          co_line_ids: ["C1", "C9"],
+          explanation: "x",
+          question: "y",
+        },
+        {
+          type: "vague_item" as const,
+          co_line_ids: ["C9"],
+          explanation: "x",
+          question: "y",
+        },
       ],
     };
 
@@ -562,7 +709,12 @@ describe("sanitize", () => {
     const { flags } = run({
       changeOrder: extraction({ line_items: [line({ id: "C1", total: 250 })] }),
       judgmentFlags: [
-        { type: "vague_item", co_line_ids: ["C99"], explanation: "x", question: "y" },
+        {
+          type: "vague_item",
+          co_line_ids: ["C99"],
+          explanation: "x",
+          question: "y",
+        },
       ],
     });
 
@@ -599,33 +751,55 @@ describe("running total", () => {
     ],
   };
 
-  it("adds every change order to the original quote", () => {
+  it("counts only approved change orders toward the current total", () => {
     const totals = computeTotals(project);
 
     expect(totals.originalCents).toBe(800_000);
     expect(totals.changeOrderCents).toEqual([250_000, 52_500]);
+    expect(totals.currentCents).toBe(852_500);
+    expect(totals.pendingCents).toBe(250_000);
+    expect(totals.disputedCents).toBe(0);
+    expect(totals.percentOver).toBe("+6.6%");
+  });
+
+  it("can still report the worst case if everything is approved", () => {
+    const totals = computeTotals(project, true);
+
     expect(totals.currentCents).toBe(1_102_500);
     expect(totals.pendingCents).toBe(0);
     expect(totals.percentOver).toBe("+38%");
   });
 
-  it("counts only approved change orders when S1 is switched on", () => {
-    const totals = computeTotals(project, true);
+  it("keeps disputed money apart from pending money", () => {
+    const disputed = {
+      quote: project.quote,
+      changeOrders: [
+        { ...project.changeOrders[0], status: "disputed" as const },
+        project.changeOrders[1],
+      ],
+    };
+    const totals = computeTotals(disputed);
 
     expect(totals.currentCents).toBe(852_500);
-    expect(totals.pendingCents).toBe(250_000);
-    expect(totals.percentOver).toBe("+6.6%");
+    expect(totals.pendingCents).toBe(0);
+    expect(totals.disputedCents).toBe(250_000);
   });
 
   it("handles a project with no change orders yet", () => {
-    const totals = computeTotals({ quote: extraction({ total: 8000 }), changeOrders: [] });
+    const totals = computeTotals({
+      quote: extraction({ total: 8000 }),
+      changeOrders: [],
+    });
 
     expect(totals.currentCents).toBe(800_000);
     expect(totals.percentOver).toBe("0%");
   });
 
   it("does not divide by an unknown quote total", () => {
-    const totals = computeTotals({ quote: extraction({ total: null }), changeOrders: [] });
+    const totals = computeTotals({
+      quote: extraction({ total: null }),
+      changeOrders: [],
+    });
 
     expect(totals.originalCents).toBe(0);
     expect(totals.percentOver).toBe("—");

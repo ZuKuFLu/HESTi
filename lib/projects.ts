@@ -45,8 +45,10 @@ export type ProjectTotals = {
   changeOrderCents: number[];
   /** Original quote plus the change orders that count toward the total. */
   currentCents: number;
-  /** Change orders not yet counted (S1: the ones still pending). */
+  /** Awaiting a decision: real money, but not committed yet. */
   pendingCents: number;
+  /** Change orders the homeowner is challenging. */
+  disputedCents: number;
   /** "+31%" over the original quote, or "—" when the quote total is unknown. */
   percentOver: string;
 };
@@ -54,12 +56,16 @@ export type ProjectTotals = {
 /**
  * The running total shown on the project page.
  *
- * `countOnlyApproved` is the S1 behaviour and is off until S1 ships, so today
- * every change order counts toward the current total and nothing is pending.
+ * Only approved change orders move the current total. Pending and disputed
+ * ones are real money the homeowner may still owe, so they are shown beside
+ * it rather than folded in or hidden.
+ *
+ * `countEverything` restores the pre-S1 behaviour for callers that just want
+ * the worst case.
  */
 export function computeTotals(
   project: Pick<Project, "quote" | "changeOrders">,
-  countOnlyApproved = false,
+  countEverything = false,
 ): ProjectTotals {
   const originalCents = toCentsOrZero(project.quote.total);
   const changeOrderCents = project.changeOrders.map((order) =>
@@ -68,13 +74,16 @@ export function computeTotals(
 
   let countedCents = 0;
   let pendingCents = 0;
+  let disputedCents = 0;
 
   project.changeOrders.forEach((order, index) => {
     const cents = changeOrderCents[index];
-    if (countOnlyApproved && order.status !== "approved") {
-      pendingCents += cents;
-    } else {
+    if (countEverything || order.status === "approved") {
       countedCents += cents;
+    } else if (order.status === "disputed") {
+      disputedCents += cents;
+    } else {
+      pendingCents += cents;
     }
   });
 
@@ -85,6 +94,7 @@ export function computeTotals(
     changeOrderCents,
     currentCents,
     pendingCents,
+    disputedCents,
     percentOver: percentOver(originalCents, currentCents),
   };
 }
@@ -92,7 +102,8 @@ export function computeTotals(
 function percentOver(originalCents: number, currentCents: number): string {
   if (originalCents <= 0) return "—";
   const percent = ((currentCents - originalCents) / originalCents) * 100;
-  const rounded = Math.abs(percent) < 10 ? percent.toFixed(1) : percent.toFixed(0);
+  const rounded =
+    Math.abs(percent) < 10 ? percent.toFixed(1) : percent.toFixed(0);
   const trimmed = rounded.replace(/\.0$/, "");
   return `${percent > 0 ? "+" : ""}${trimmed}%`;
 }
@@ -162,13 +173,19 @@ export function getProject(id: string): Project | null {
 }
 
 function newId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function toChangeOrder(result: AnalysisResult, fileName: string | null): ChangeOrderRecord {
+function toChangeOrder(
+  result: AnalysisResult,
+  fileName: string | null,
+): ChangeOrderRecord {
   return {
     id: newId(),
     addedAt: new Date().toISOString(),
@@ -228,6 +245,30 @@ export function addChangeOrder(
   writeRaw(next);
 
   return { ok: true, project: updated };
+}
+
+/** S1: the homeowner marks where each change order stands. */
+export function setChangeOrderStatus(
+  projectId: string,
+  changeOrderId: string,
+  status: ChangeOrderStatus,
+): Project | null {
+  const projects = readRaw();
+  const index = projects.findIndex((project) => project.id === projectId);
+  if (index === -1) return null;
+
+  const existing = projects[index];
+  const updated: Project = {
+    ...existing,
+    changeOrders: existing.changeOrders.map((order) =>
+      order.id === changeOrderId ? { ...order, status } : order,
+    ),
+  };
+  const next = [...projects];
+  next[index] = updated;
+  writeRaw(next);
+
+  return updated;
 }
 
 /** The demo checkout's only side effect. */

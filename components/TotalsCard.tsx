@@ -1,11 +1,17 @@
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate, formatUsd } from "@/lib/money";
-import { computeTotals, type Project } from "@/lib/projects";
+import {
+  computeTotals,
+  type ChangeOrderStatus,
+  type Project,
+} from "@/lib/projects";
 
 export function TotalsCard({ project }: { project: Project }) {
   const totals = computeTotals(project);
+  const worstCase = computeTotals(project, true);
   const overCents = Math.max(0, totals.currentCents - totals.originalCents);
+  const undecidedCents = totals.pendingCents + totals.disputedCents;
 
   // The bar is the current total. The filled part is what was originally
   // quoted; the terracotta tail is everything added since.
@@ -73,7 +79,9 @@ export function TotalsCard({ project }: { project: Project }) {
               key={order.id}
               label={`Change order ${index + 1}`}
               sublabel={formatDate(order.extraction.document_date) ?? undefined}
+              status={order.status}
               value={formatUsd(totals.changeOrderCents[index])}
+              muted={order.status !== "approved"}
             />
           ))}
           <div className="flex items-baseline justify-between gap-4 pt-3 text-base font-semibold">
@@ -81,31 +89,88 @@ export function TotalsCard({ project }: { project: Project }) {
             <dd className="tabular-nums">{formatUsd(totals.currentCents)}</dd>
           </div>
         </dl>
+
+        {undecidedCents > 0 ? (
+          <div className="space-y-2 rounded-xl bg-muted/70 p-4 text-sm ring-1 ring-foreground/5 ring-inset">
+            <p className="text-xs text-muted-foreground">
+              Not in the total above, because you haven&apos;t approved it yet:
+            </p>
+            {totals.pendingCents > 0 ? (
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-medium-line" />
+                  Pending
+                </span>
+                <span className="font-medium tabular-nums">
+                  {formatUsd(totals.pendingCents)}
+                </span>
+              </div>
+            ) : null}
+            {totals.disputedCents > 0 ? (
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="flex items-center gap-2">
+                  <span className="size-2 rounded-full bg-high-line" />
+                  Disputed
+                </span>
+                <span className="font-medium tabular-nums">
+                  {formatUsd(totals.disputedCents)}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex items-baseline justify-between gap-4 border-t border-border/70 pt-2 text-muted-foreground">
+              <span>If you approve everything</span>
+              <span className="font-medium tabular-nums">
+                {formatUsd(worstCase.currentCents)} ({worstCase.percentOver})
+              </span>
+            </div>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
 }
 
+const STATUS_STYLES: Record<ChangeOrderStatus, string> = {
+  pending: "bg-medium-bg text-medium",
+  approved: "bg-primary/10 text-primary",
+  disputed: "bg-high-bg text-high",
+};
+
 function Row({
   label,
   sublabel,
+  status,
   value,
+  muted = false,
 }: {
   label: string;
   sublabel?: string;
+  status?: ChangeOrderStatus;
   value: string;
+  muted?: boolean;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-3">
-      <dt className="min-w-0">
+      <dt className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
         <span className="wrap-anywhere">{label}</span>
         {sublabel ? (
-          <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+          <span className="text-xs text-muted-foreground tabular-nums">
             {sublabel}
           </span>
         ) : null}
+        {status ? (
+          <span
+            className={`rounded-full px-1.5 py-0.5 text-[0.7rem] font-medium capitalize ${STATUS_STYLES[status]}`}
+          >
+            {status}
+          </span>
+        ) : null}
       </dt>
-      <dd className="shrink-0 tabular-nums">{value}</dd>
+      <dd
+        className={`shrink-0 tabular-nums ${muted ? "text-muted-foreground line-through" : ""}`}
+      >
+        {value}
+      </dd>
     </div>
   );
 }
