@@ -76,7 +76,7 @@ export default function Home() {
 
   return (
     <div className="space-y-20">
-      <section className="hearth-glow -mx-5 -mt-12 rounded-b-[2rem] px-5 pt-14 pb-12">
+      <section className="pt-2 pb-2">
         <div className="grid items-center gap-10 lg:grid-cols-[1.02fr_0.98fr]">
           <div>
             <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">

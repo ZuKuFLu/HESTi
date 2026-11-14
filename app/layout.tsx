@@ -29,7 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased">
-        <div className="flex min-h-screen flex-col">
+        {/* Warm wash at the top of every page. Fixed and decorative, so it
+            can never widen the layout the way a full-bleed section would. */}
+        <div
+          aria-hidden
+          className="hearth-glow pointer-events-none fixed inset-x-0 top-0 h-[36rem]"
+        />
+        <div className="relative flex min-h-screen flex-col">
           <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
             <div className="mx-auto flex max-w-[1100px] items-center justify-between px-5 py-3.5">
               <Link

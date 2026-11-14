@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -109,17 +109,21 @@ export function FlagCard({
 
 /** The sentence the homeowner actually sends, so it is built to be copied. */
 function AskBlock({ question }: { question: string }) {
-  const [copied, setCopied] = useState(false);
+  const [state, setState] = useState<"idle" | "copied" | "manual">("idle");
+  const textRef = useRef<HTMLParagraphElement>(null);
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(question);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard access can be refused; the text is on screen either way.
-      setCopied(false);
+    const ok = await writeToClipboard(question);
+    if (ok) {
+      setState("copied");
+      window.setTimeout(() => setState("idle"), 2000);
+      return;
     }
+    // Some browsers refuse clipboard writes outright. Select the text so
+    // Ctrl+C still works rather than leaving a button that does nothing.
+    selectText(textRef.current);
+    setState("manual");
+    window.setTimeout(() => setState("idle"), 4000);
   }
 
   return (
@@ -135,17 +139,59 @@ function AskBlock({ question }: { question: string }) {
           aria-label="Copy this question"
           className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          {copied ? (
+          {state === "copied" ? (
             <Check className="size-3.5" />
           ) : (
             <Copy className="size-3.5" />
           )}
-          {copied ? "Copied" : "Copy"}
+          {state === "copied"
+            ? "Copied"
+            : state === "manual"
+              ? "Press Ctrl+C"
+              : "Copy"}
         </button>
       </div>
-      <p className="mt-1.5 text-sm leading-relaxed wrap-anywhere">{question}</p>
+      <p ref={textRef} className="mt-1.5 text-sm leading-relaxed wrap-anywhere">
+        {question}
+      </p>
     </div>
   );
+}
+
+async function writeToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fall through to the legacy path below.
+  }
+  try {
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.top = "0";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(field);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+function selectText(element: HTMLElement | null) {
+  if (!element) return;
+  const selection = window.getSelection();
+  if (!selection) return;
+  const range = document.createRange();
+  range.selectNodeContents(element);
+  selection.removeAllRanges();
+  selection.addRange(range);
 }
 
 function EvidenceRow({ source, line }: { source: string; line: LineItem }) {
