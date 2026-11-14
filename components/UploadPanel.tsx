@@ -1,11 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { FileText, Loader2, Upload, X } from "lucide-react";
+import { useImperativeHandle, useRef, useState } from "react";
+import {
+  Check,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ACCEPTED_FILE_TYPES, isAcceptedFile, prepareFileForUpload } from "@/lib/image";
@@ -16,9 +24,9 @@ const SAMPLE_PROJECT_NAME = "Sample: Maya's bathroom remodel";
 const MAX_TEXT_CHARS = 20_000;
 
 const PROGRESS_STEPS = [
-  "Reading your documents…",
-  "Comparing with your quote…",
-  "Checking the math…",
+  "Reading your documents",
+  "Comparing with your quote",
+  "Checking the math",
 ] as const;
 
 export type AnalysisPayload = {
@@ -27,23 +35,21 @@ export type AnalysisPayload = {
   changeOrderFileName: string | null;
 };
 
+/** Lets the hero's "Try a sample" button drive the panel below it. */
+export type UploadPanelHandle = { runSample: () => void };
+
 type SlotState = { mode: "file" | "text"; file: File | null; text: string };
 
 const emptySlot = (): SlotState => ({ mode: "file", file: null, text: "" });
 
-/**
- * Two shapes, one state machine.
- *
- * On the home page both documents are collected. On a project page the quote
- * is already extracted, so `quoteJson` is sent instead and only the new change
- * order is uploaded — still one document, still one Gemini call.
- */
 export function UploadPanel({
   onResult,
   quoteJson,
+  ref,
 }: {
   onResult: (payload: AnalysisPayload) => void;
   quoteJson?: string;
+  ref?: React.Ref<UploadPanelHandle>;
 }) {
   const changeOrderOnly = quoteJson !== undefined;
   const [quote, setQuote] = useState<SlotState>(emptySlot);
@@ -54,6 +60,8 @@ export function UploadPanel({
   const [error, setError] = useState<string | null>(null);
   const [lastRun, setLastRun] = useState<null | "form" | "sample">(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useImperativeHandle(ref, () => ({ runSample: () => void submitSample() }));
 
   function startProgress() {
     setStep(0);
@@ -92,7 +100,9 @@ export function UploadPanel({
         changeOrderFileName: coFileName,
       });
     } catch {
-      setError("We couldn't reach the server. Please check your connection and try again.");
+      setError(
+        "We couldn't reach the server. Please check your connection and try again.",
+      );
     } finally {
       stopProgress();
       setBusy(false);
@@ -101,7 +111,8 @@ export function UploadPanel({
 
   async function submitForm() {
     const quoteReady = quote.mode === "file" ? quote.file : quote.text.trim();
-    const coReady = changeOrder.mode === "file" ? changeOrder.file : changeOrder.text.trim();
+    const coReady =
+      changeOrder.mode === "file" ? changeOrder.file : changeOrder.text.trim();
 
     if (!changeOrderOnly && !quoteReady) {
       setError("Please add your original quote.");
@@ -171,9 +182,9 @@ export function UploadPanel({
   }
 
   return (
-    <Card className="border-2">
-      <CardContent className="space-y-6">
-        <div className={changeOrderOnly ? "" : "grid gap-5 sm:grid-cols-2"}>
+    <Card className="shadow-[0_1px_2px_rgba(28,36,52,0.04),0_12px_32px_-12px_rgba(28,36,52,0.12)] ring-foreground/10">
+      <CardContent className="space-y-6 py-2">
+        <div className={changeOrderOnly ? "" : "grid gap-4 sm:grid-cols-2"}>
           {changeOrderOnly ? null : (
             <DocumentSlot
               label="Original quote"
@@ -199,7 +210,7 @@ export function UploadPanel({
         </div>
 
         {changeOrderOnly ? null : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label htmlFor="project-name" className="text-sm font-medium">
               Project name{" "}
               <span className="font-normal text-muted-foreground">(optional)</span>
@@ -215,20 +226,12 @@ export function UploadPanel({
           </div>
         )}
 
-        {busy ? (
-          <div className="space-y-3 rounded-lg border bg-muted/40 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Loader2 className="size-4 animate-spin" />
-              {PROGRESS_STEPS[step]}
-            </div>
-            <Progress value={((step + 1) / PROGRESS_STEPS.length) * 100} />
-          </div>
-        ) : null}
+        {busy ? <AnalyzingSteps step={step} /> : null}
 
         {error && !busy ? (
           <div
             role="alert"
-            className="space-y-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-900"
+            className="space-y-3 rounded-xl bg-high-bg p-4 text-sm text-high ring-1 ring-high-line/25"
           >
             <p>{error}</p>
             {lastRun ? (
@@ -240,22 +243,76 @@ export function UploadPanel({
         ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button onClick={submitForm} disabled={busy} size="lg" className="sm:flex-1">
-            {busy ? "Checking…" : changeOrderOnly ? "Check this change order" : "Check my change order"}
+          <Button
+            onClick={submitForm}
+            disabled={busy}
+            className="h-11 px-5 text-base sm:flex-1"
+          >
+            {busy
+              ? "Checking…"
+              : changeOrderOnly
+                ? "Check this change order"
+                : "Check my change order"}
           </Button>
           {changeOrderOnly ? null : (
-            <Button onClick={submitSample} disabled={busy} size="lg" variant="outline">
+            <Button
+              onClick={submitSample}
+              disabled={busy}
+              variant="outline"
+              className="h-11 gap-2 px-5 text-base"
+            >
+              <Sparkles className="size-4" />
               Try a sample
             </Button>
           )}
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Demo build on a free AI tier: please don&apos;t upload documents with sensitive
-          personal information.
+        <p className="flex items-start gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="mt-px size-3.5 shrink-0" />
+          <span>
+            Demo build on a free AI tier: please don&apos;t upload documents with
+            sensitive personal information.
+          </span>
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+/** Progress the homeowner can read: done, doing, still to come. */
+function AnalyzingSteps({ step }: { step: number }) {
+  return (
+    <ul className="space-y-2.5 rounded-xl bg-muted/70 p-4 ring-1 ring-foreground/5 ring-inset">
+      {PROGRESS_STEPS.map((label, index) => {
+        const done = index < step;
+        const active = index === step;
+        return (
+          <li
+            key={label}
+            className={`flex items-center gap-2.5 text-sm transition-colors ${
+              done || active ? "text-foreground" : "text-muted-foreground/60"
+            }`}
+          >
+            <span
+              className={`flex size-5 shrink-0 items-center justify-center rounded-full ${
+                done
+                  ? "bg-primary text-primary-foreground"
+                  : active
+                    ? "bg-primary/15 text-primary"
+                    : "bg-foreground/5"
+              }`}
+            >
+              {done ? (
+                <Check className="size-3 animate-in zoom-in-50 duration-200" />
+              ) : active ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : null}
+            </span>
+            <span className={active ? "font-medium" : ""}>{label}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -276,6 +333,7 @@ function DocumentSlot({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   function pickFile(file: File | null) {
     if (!file) return;
@@ -286,6 +344,8 @@ function DocumentSlot({
     setFileError(null);
     onChange({ ...state, file });
   }
+
+  const isImage = state.file?.type.startsWith("image/") ?? false;
 
   return (
     <div className="space-y-2">
@@ -299,10 +359,12 @@ function DocumentSlot({
         onValueChange={(value) => onChange({ ...state, mode: value as SlotState["mode"] })}
       >
         <TabsList className="w-full">
-          <TabsTrigger value="file" disabled={disabled} className="flex-1">
-            Upload
+          <TabsTrigger value="file" disabled={disabled} className="flex-1 gap-1.5">
+            <Upload className="size-3.5" />
+            PDF or photo
           </TabsTrigger>
-          <TabsTrigger value="text" disabled={disabled} className="flex-1">
+          <TabsTrigger value="text" disabled={disabled} className="flex-1 gap-1.5">
+            <FileText className="size-3.5" />
             Paste text
           </TabsTrigger>
         </TabsList>
@@ -318,14 +380,27 @@ function DocumentSlot({
             onChange={(event) => pickFile(event.target.files?.[0] ?? null)}
           />
           {state.file ? (
-            <div className="flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
-              <FileText className="size-4 shrink-0 text-muted-foreground" />
-              <span className="min-w-0 flex-1 truncate">{state.file.name}</span>
+            <div className="flex items-center gap-2.5 rounded-xl bg-primary/5 p-3 ring-1 ring-primary/20">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                {isImage ? (
+                  <ImageIcon className="size-4.5" />
+                ) : (
+                  <FileText className="size-4.5" />
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">
+                  {state.file.name}
+                </span>
+                <span className="block text-xs text-muted-foreground tabular-nums">
+                  {formatBytes(state.file.size)}
+                </span>
+              </span>
               <Button
                 type="button"
-                size="icon"
+                size="icon-sm"
                 variant="ghost"
-                className="size-7 shrink-0"
+                className="shrink-0"
                 disabled={disabled}
                 aria-label={`Remove ${state.file.name}`}
                 onClick={() => {
@@ -337,18 +412,42 @@ function DocumentSlot({
               </Button>
             </div>
           ) : (
-            <Button
+            <button
               type="button"
-              variant="outline"
-              className="h-auto w-full justify-start gap-2 py-3 font-normal"
               disabled={disabled}
               onClick={() => inputRef.current?.click()}
+              onDragOver={(event) => {
+                event.preventDefault();
+                if (!disabled) setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(event) => {
+                event.preventDefault();
+                setDragging(false);
+                if (!disabled) pickFile(event.dataTransfer.files?.[0] ?? null);
+              }}
+              className={`flex w-full flex-col items-center gap-1.5 rounded-xl border border-dashed px-4 py-6 text-center transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 ${
+                dragging
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-muted/40 hover:border-primary/50 hover:bg-primary/5"
+              }`}
             >
-              <Upload className="size-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Choose a PDF or photo</span>
-            </Button>
+              <span
+                className={`flex size-9 items-center justify-center rounded-full transition-colors ${
+                  dragging
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background text-muted-foreground ring-1 ring-foreground/10"
+                }`}
+              >
+                <Upload className="size-4" />
+              </span>
+              <span className="text-sm font-medium">
+                {dragging ? "Drop it here" : "Drag a file or browse"}
+              </span>
+              <span className="text-xs text-muted-foreground">PDF, JPG, PNG or WebP</span>
+            </button>
           )}
-          {fileError ? <p className="mt-2 text-xs text-red-700">{fileError}</p> : null}
+          {fileError ? <p className="mt-2 text-xs text-high">{fileError}</p> : null}
         </TabsContent>
 
         <TabsContent value="text" className="mt-2">
@@ -357,7 +456,7 @@ function DocumentSlot({
             value={state.text}
             onChange={(event) => onChange({ ...state, text: event.target.value })}
             placeholder="Paste the text of the document here"
-            className="min-h-[104px]"
+            className="min-h-[124px]"
             disabled={disabled}
             maxLength={MAX_TEXT_CHARS}
           />
@@ -365,6 +464,12 @@ function DocumentSlot({
       </Tabs>
     </div>
   );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 async function fetchSample(name: string): Promise<File> {
