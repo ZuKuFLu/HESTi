@@ -30,6 +30,8 @@ has_signature_or_approval is about the CLIENT or homeowner, because that is the 
 
 In payment_terms, record every statement about when money is due, including a single sentence such as one saying the amount is due on signing.
 
+Line ids are internal. The homeowner never sees them, so explanations and questions must name the item by its description ("the additional labor line"), never as "C3" or "Line C3".
+
 Return JSON only, matching the provided schema.`;
 
 export type AnalyzeFailure = { ok: false; error: "ai_busy" | "ai_invalid" };
