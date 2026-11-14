@@ -91,7 +91,7 @@ export default function Home() {
             <section className="mt-12 space-y-5">
               <div>
                 <p className="text-sm text-muted-foreground">Report</p>
-                <h2 className="text-2xl font-semibold tracking-tight">
+                <h2 className="text-2xl font-semibold tracking-tight wrap-anywhere">
                   {payload.projectName}
                 </h2>
               </div>

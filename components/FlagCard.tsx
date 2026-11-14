@@ -38,13 +38,13 @@ export function FlagCard({
     <Card className={`border-l-4 ${styles.card}`}>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${styles.badge}`}
+              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${styles.badge}`}
             >
               {styles.label}
             </span>
-            <h3 className="text-base font-semibold">{flag.title}</h3>
+            <h3 className="min-w-0 text-base font-semibold wrap-anywhere">{flag.title}</h3>
           </div>
           {flag.amountCents > 0 ? (
             <span className="text-base font-semibold tabular-nums">
@@ -53,7 +53,9 @@ export function FlagCard({
           ) : null}
         </div>
 
-        <p className="text-sm leading-relaxed text-muted-foreground">{flag.explanation}</p>
+        <p className="text-sm leading-relaxed text-muted-foreground wrap-anywhere">
+          {flag.explanation}
+        </p>
 
         {hasEvidence ? (
           <div className="rounded-lg bg-muted/50 p-3">
@@ -75,7 +77,7 @@ export function FlagCard({
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Ask your contractor
           </p>
-          <p className="mt-1 text-sm leading-relaxed">{flag.question}</p>
+          <p className="mt-1 text-sm leading-relaxed wrap-anywhere">{flag.question}</p>
         </div>
       </CardContent>
     </Card>
@@ -85,10 +87,10 @@ export function FlagCard({
 function EvidenceRow({ source, line }: { source: string; line: LineItem }) {
   return (
     <li className="flex flex-wrap items-baseline gap-x-2">
-      <span className="text-xs text-muted-foreground">{source}</span>
-      <span className="min-w-0 flex-1">{line.description}</span>
+      <span className="shrink-0 text-xs text-muted-foreground">{source}</span>
+      <span className="min-w-0 flex-1 basis-40 wrap-anywhere">{line.description}</span>
       {line.total !== null ? (
-        <span className="tabular-nums">{formatUsd(toCentsOrZero(line.total))}</span>
+        <span className="shrink-0 tabular-nums">{formatUsd(toCentsOrZero(line.total))}</span>
       ) : null}
     </li>
   );

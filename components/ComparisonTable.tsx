@@ -35,19 +35,20 @@ export function ComparisonTable({
   const byCoLine = new Map(matches.map((match) => [match.co_line_id, match]));
   const quoteLines = new Map(quote.line_items.map((line) => [line.id, line]));
 
+  // The table keeps a 640px minimum and scrolls sideways on a phone rather
+  // than crushing five columns into 375px.
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-[640px]">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">Line</TableHead>
-            <TableHead>Description</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Matched quote line</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+    <Table className="min-w-[640px]">
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-14">Line</TableHead>
+          <TableHead className="w-[36%]">Description</TableHead>
+          <TableHead className="w-24 text-right">Amount</TableHead>
+          <TableHead className="w-36">Status</TableHead>
+          <TableHead className="w-[26%]">Matched quote line</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
           {changeOrder.line_items.map((line) => {
             const match = byCoLine.get(line.id);
             const relation = match?.relation ?? "unclear";
@@ -58,28 +59,29 @@ export function ComparisonTable({
 
             return (
               <TableRow key={line.id}>
-                <TableCell className="font-mono text-xs text-muted-foreground">
+                <TableCell className="align-top font-mono text-xs text-muted-foreground">
                   {line.id}
                 </TableCell>
-                <TableCell className="max-w-[320px]">{line.description}</TableCell>
-                <TableCell className="text-right tabular-nums">
+                <TableCell className="align-top wrap-anywhere whitespace-normal">
+                  {line.description}
+                </TableCell>
+                <TableCell className="align-top text-right tabular-nums">
                   {line.total !== null ? formatUsd(toCentsOrZero(line.total)) : "—"}
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <span
                     className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${badge.className}`}
                   >
                     {badge.label}
                   </span>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="align-top wrap-anywhere whitespace-normal text-sm text-muted-foreground">
                   {quoteLine ? quoteLine.description : "—"}
                 </TableCell>
               </TableRow>
             );
           })}
-        </TableBody>
-      </Table>
-    </div>
+      </TableBody>
+    </Table>
   );
 }
