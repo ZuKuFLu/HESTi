@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { House } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HESTi — Understand your contractor's change order",
+  title: "HESTi — Know what you're paying for",
   description:
     "Upload your original quote and a change order. HESTi compares them, checks the math and tells you what to ask your contractor.",
 };
@@ -29,20 +30,39 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased">
         <div className="flex min-h-screen flex-col">
-          <header className="border-b">
-            <div className="mx-auto flex max-w-[1100px] items-center px-5 py-4">
-              <Link href="/" className="text-lg font-semibold tracking-tight">
-                HESTi
+          <header className="sticky top-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
+            <div className="mx-auto flex max-w-[1100px] items-center justify-between px-5 py-3.5">
+              <Link
+                href="/"
+                className="group flex items-center gap-2 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform group-hover:-translate-y-px">
+                  <House className="size-4.5" />
+                </span>
+                <span className="text-lg font-semibold tracking-tight">
+                  HESTi
+                </span>
               </Link>
+              <span className="text-xs text-muted-foreground">
+                Change orders, in plain English
+              </span>
             </div>
           </header>
 
-          <main className="mx-auto w-full max-w-[1100px] flex-1 px-5 py-12">{children}</main>
+          <main className="mx-auto w-full max-w-[1100px] flex-1 px-5 py-12">
+            {children}
+          </main>
 
-          <footer className="border-t">
-            <div className="mx-auto max-w-[1100px] px-5 py-6 text-xs text-muted-foreground">
-              Not legal, financial or construction advice. Flags are questions to ask, not
-              accusations.
+          <footer className="mt-8 border-t border-border/70">
+            <div className="mx-auto flex max-w-[1100px] flex-col gap-2 px-5 py-8 text-xs text-muted-foreground">
+              <p className="flex items-center gap-1.5 font-medium text-foreground">
+                <House className="size-3.5 text-primary" />
+                HESTi
+              </p>
+              <p className="max-w-2xl">
+                Not legal, financial or construction advice. Flags are questions
+                to ask, not accusations.
+              </p>
             </div>
           </footer>
         </div>
