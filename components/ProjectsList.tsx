@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { ChevronRight, House, Sparkles } from "lucide-react";
 import { formatDate, formatUsd } from "@/lib/money";
 import { computeTotals, listProjects, type Project } from "@/lib/projects";
 
@@ -22,7 +21,13 @@ export function ProjectsList() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-2xl font-semibold tracking-tight">Your projects</h2>
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">Your projects</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Saved in this browser. Come back when the next change order lands.
+        </p>
+      </div>
+
       <ul className="space-y-3">
         {projects.map((project) => {
           const totals = computeTotals(project);
@@ -30,37 +35,47 @@ export function ProjectsList() {
 
           return (
             <li key={project.id}>
-              <Card className="transition-colors hover:border-primary/50">
-                <CardContent>
-                  <Link
-                    href={`/p/${project.id}`}
-                    className="flex items-center gap-4 outline-none focus-visible:underline"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 font-medium wrap-anywhere">
-                        {project.name}
-                      </p>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        {count} change order{count === 1 ? "" : "s"}
-                        {project.paid ? " · Project Pass" : ""}
-                        {" · started "}
-                        {formatDate(project.createdAt.slice(0, 10))}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="font-semibold tabular-nums">
-                        {formatUsd(totals.currentCents)}
-                      </p>
-                      {totals.originalCents > 0 ? (
-                        <p className="text-xs text-muted-foreground tabular-nums">
-                          {totals.percentOver} over quote
-                        </p>
-                      ) : null}
-                    </div>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                </CardContent>
-              </Card>
+              <Link
+                href={`/p/${project.id}`}
+                className="flex items-center gap-4 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 transition-all outline-none hover:ring-primary/40 focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <House className="size-5" />
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 font-medium wrap-anywhere">
+                    {project.name}
+                  </p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
+                    <span>
+                      {count} change order{count === 1 ? "" : "s"}
+                    </span>
+                    {project.paid ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary">
+                        <Sparkles className="size-3" />
+                        Pass
+                      </span>
+                    ) : null}
+                    <span>
+                      · started {formatDate(project.createdAt.slice(0, 10))}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="shrink-0 text-right">
+                  <p className="font-semibold tabular-nums">
+                    {formatUsd(totals.currentCents)}
+                  </p>
+                  {totals.originalCents > 0 ? (
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {totals.percentOver} over quote
+                    </p>
+                  ) : null}
+                </div>
+
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </Link>
             </li>
           );
         })}
