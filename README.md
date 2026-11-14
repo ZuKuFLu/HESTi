@@ -49,7 +49,23 @@ running total, so you can come back when the next change order arrives.
 ### How to test the paywall
 
 Checkout is a **demo checkout** — no real payment is taken and no card details
-are collected. _Steps TBD._
+are collected.
+
+1. On the home page, press **Try a sample**. You land on the project page with
+   the first report and a running total.
+2. Press **Add another change order**. Because the project isn't paid, you get
+   the paywall card: the $39 price, what's included, and a line drawn from your
+   own report ("Your first change order had $1,360.00 at stake…").
+3. Press **Unlock Project Pass** → the demo checkout, with an order summary and
+   a banner saying no real payment is taken.
+4. Press **Complete purchase**. You return to the project, unlocked.
+5. Press **Add another change order** again and upload
+   `public/samples/change-order-2.pdf`. The second report flags the haul-away
+   fee as already covered by the original quote, and the running total updates
+   to $11,025.00.
+
+The pass is stored against that project in your browser, so clearing site data
+resets it.
 
 ## Retention roadmap (not built yet)
 
