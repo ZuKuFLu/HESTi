@@ -1,15 +1,14 @@
 # HESTi
 
-**Know what changed, what it costs, and what to ask — before you sign the change order.**
+**Know what changed, what it costs, and what to ask - before you sign the change order.**
 
 Track: **01 Money** (spending, owing).
 
 - **Live URL:** https://hesti-two.vercel.app
-- **Pitch deck (PDF):** _added by the team before submission_
 
 ## The problem
 
-A US homeowner hires a contractor at a fixed quote — say $8,000 for a bathroom.
+A US homeowner hires a contractor at a fixed quote - say $8,000 for a bathroom.
 Halfway through, a change order arrives for +$2,500. The homeowner can't tell
 what actually changed, whether they're being charged twice for the same work,
 why the completion date moved, or what questions to ask.
